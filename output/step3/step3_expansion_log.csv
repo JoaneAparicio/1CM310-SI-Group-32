@@ -1,0 +1,4 @@
+sim_t,date,wc,tier,old_hours,new_hours,effective_date,monthly_cost_eur,capex_eur,annual_opex_eur,trigger_util
+90.0,2025-04-01,WC_BW,1,16,21,2025-05-01,30000,0,0,97.5
+120.0,2025-05-01,WC_BW,2,16,16,2025-10-28,8333,500000,100000,93.1
+330.0,2025-11-27,WC_AMILL_HS,2,21,21,2026-05-26,8333,500000,100000,93.3

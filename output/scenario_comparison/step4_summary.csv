@@ -1,0 +1,8 @@
+Scenario,Extra WOs,WOs completed,Tardy WOs,On-time %,Mean LT (d),P95 LT (d),Avg tardiness (d),Top WC,Top WC util %,Bottlenecks (>85%),Warnings (>70%),Tier-1 expansions,Tier-2 expansions,Total CAPEX (€),Extra monthly (€)
+S0 — Baseline,0,6095,140,97.7,21.8,49.5,10.2,WC_BW,52.9,None,None,4,3,1500000,368499
+S1 — Conservative (+30 % 2026),1818,7806,172,97.8,21.3,48.8,9.7,WC_BW,65.6,None,None,4,3,1500000,368499
+"S2 — Base / High (+65 % 2026, +65 % 2027)",7878,9771,205,97.9,21.1,48.2,9.0,WC_BW,80.4,None,WC_BW,5,3,1500000,386499
+"S6 — New Customer (low-mix, high-volume, Jul 2026)",91,6186,140,97.7,21.5,49.4,10.2,WC_BW,53.7,None,None,4,3,1500000,368499
+S3 — Proactive WC_BW (Baseline demand),0,6095,139,97.7,21.1,48.4,10.2,WC_BW,52.9,None,None,5,3,1500000,380499
+S4 — Proactive WC_BW (Conservative demand),1818,7806,169,97.8,20.8,47.6,9.7,WC_BW,65.6,None,None,5,3,1500000,380499
+S5 — Proactive WC_BW (Base/High demand),7878,9771,201,97.9,20.5,47.0,9.0,WC_BW,80.4,None,WC_BW,6,3,1500000,398499

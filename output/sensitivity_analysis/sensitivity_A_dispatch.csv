@@ -1,0 +1,5 @@
+Experiment,OTA %,Mean LT (d),P50 LT (d),P95 LT (d),Tardy WOs,Avg tardiness (d),WC_BW util %,WC_BW mean Q (d),WC_BW max Q (d),AMILL_HS util %,MMILL util %,GFC expansions,dispatch
+A0 — EDD (baseline),97.7,21.8,16.6,49.5,140,10.2,63.5,0.48,54.1,33.7,45.8,6,EDD
+A1 — Slack,97.7,21.8,16.6,50.0,143,9.3,63.5,0.44,62.7,33.7,45.8,6,SLACK
+A2 — SPT,97.6,20.7,16.3,48.2,144,10.2,63.5,0.04,54.4,33.7,45.8,6,SPT
+A3 — FIFO,97.2,21.5,16.8,49.6,172,11.2,63.5,0.33,3.5,33.7,45.8,6,FIFO

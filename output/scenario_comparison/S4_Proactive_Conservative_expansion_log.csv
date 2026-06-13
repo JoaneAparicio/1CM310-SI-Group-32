@@ -1,0 +1,9 @@
+sim_t,date,wc,tier,label,old_hours,new_hours,extra_hours_total,effective_date,monthly_cost_eur,capex_eur,annual_opex_eur,trigger_util
+0.0,2025-01-01,WC_BW,1,proactive bridge +2h,16,18,2,2025-01-31,12000,0,0,0.0
+0.0,2025-01-01,WC_BW,2,proactive +1 machine,16,16,0,2025-06-30,8333,500000,100000,0.0
+112.0,2025-04-23,WC_BW,1,->21h (alert),18,21,5,2025-05-23,30000,0,0,96.6
+196.0,2025-07-16,WC_BW,2,2nd machine (BW exception),21,21,5,2026-01-12,8333,500000,100000,86.7
+280.0,2025-10-08,WC_MMILL,1,+2h (warning),16,18,2,2025-11-07,57000,0,0,73.2
+308.0,2025-11-05,WC_AMILL_HS,2,machine,21,21,0,2026-05-04,8333,500000,100000,92.2
+336.0,2025-12-03,WC_MMILL,1,+2h (warning),18,20,4,2026-01-02,114000,0,0,81.7
+406.0,2026-02-11,WC_MMILL,1,+1h (warning),20,21,5,2026-03-13,142500,0,0,78.3

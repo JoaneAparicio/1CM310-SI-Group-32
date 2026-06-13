@@ -1,0 +1,4 @@
+sim_t,date,wc,util,msg
+60.0,2025-03-02,WC_BW,98.3,ALERT: WC_BW rolling util 98.3% > 85.0%
+240.0,2025-08-29,WC_BW,100.0,ALERT: WC_BW rolling util 100.0% > 85.0%
+300.0,2025-10-28,WC_AMILL_HS,100.0,ALERT: WC_AMILL_HS rolling util 100.0% > 85.0%
