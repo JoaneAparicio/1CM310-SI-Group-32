@@ -46,7 +46,7 @@ HERE = Path(__file__).parent.resolve()
 sys.path.insert(0, str(HERE))
 import config as _cfg
 
-OUT = HERE / "output" / f"forecast_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+OUT = HERE / "output" / "forecast"
 OUT.mkdir(parents=True, exist_ok=True)
 print(f"Output folder: {OUT}")
 

@@ -1,4 +1,4 @@
 Experiment,OTA %,Mean LT (d),P50 LT (d),P95 LT (d),Tardy WOs,Avg tardiness (d),WC_BW util %,WC_BW mean Q (d),WC_BW max Q (d),AMILL_HS util %,MMILL util %,GFC expansions,alert_sustain
-B0 — Alert sustain 7 d (baseline),97.7,21.8,16.6,49.5,140,10.2,63.5,0.48,54.1,33.7,53.4,4,7.0
-B1 — Alert sustain 3 d,97.7,21.8,16.6,49.5,140,10.2,63.5,0.48,54.1,33.7,45.8,6,3.0
-B2 — Alert sustain 1 d,97.7,21.8,16.6,49.5,140,10.2,63.5,0.48,54.1,33.7,45.8,6,1.0
+B0 — Alert sustain 7 d (baseline),97.7,21.8,16.6,49.5,140,10.2,52.9,0.48,54.1,33.7,53.4,5,7.0
+B1 — Alert sustain 3 d,97.7,21.8,16.6,49.5,140,10.2,52.9,0.48,54.1,33.7,45.8,7,3.0
+B2 — Alert sustain 1 d,97.7,21.8,16.6,49.5,140,10.2,52.9,0.48,54.1,33.7,45.8,7,1.0
