@@ -21,7 +21,7 @@ INITIAL-STATE ASSUMPTIONS:
   - The simulation is discrete-event, time-stepped in fractional working days.
 
 DATA FILES REQUIRED (project folder):
-  SDG_ProcessingTime.xlsx  (sheets: 1_ROUTING_BASE, 2_WORK_ORDERS_BASE)
+  data.xlsx  (sheets: 1_ROUTING_BASE, 2_WORK_ORDERS_BASE)
 """
 
 import heapq

@@ -1,0 +1,120 @@
+Run started: 2026-06-19T17:10:32.180122
+======================================================================
+
+Data file : /sessions/loving-youthful-hypatia/mnt/DESIGN+INTEGRATION/data.xlsx
+Loading data…
+Items with routing : 1521
+Work orders        : 7333
+WOs without routing: 0 items → skipped
+Work orders scheduled : 7333
+GFC check events      : 52
+
+Running simulation…
+  [GFC 2025-04-09] ALERT   WC_BW: 97.5%
+  [GFC 2025-04-23] T1-MAX TIER-1 ->21h (alert): WC_BW  16 -> 21 h/day  [4 machines, cumul. +5h -> 30,000 EUR/mo].  Effective 2025-05-23.
+  [SIM  2025-05-23] Tier-1 effective: WC_BW now running 21 h/day (was 16 h)
+  [GFC 2025-06-18] T2 TIER-2 (+1 machine): WC_BW.  500,000 EUR CAPEX + 100,000 EUR/yr OPEX.  Online 2025-12-15 (6-month lead time).
+  [GFC 2025-07-02] WARNING WC_AMILL_HS: 70.6%
+  [GFC 2025-07-30] WARNING WC_BW: 83.1%
+  [GFC 2025-08-13] ALERT   WC_BW: 87.7%
+  [GFC 2025-08-27] WARNING WC_MMILL: 72.3%
+  [GFC 2025-09-24] WARNING WC_MMILL: 73.4%
+  [GFC 2025-10-08] WARNING WC_AMILL_HS: 79.4%
+  [GFC 2025-10-08] T1 TIER-1 +2h (warning): WC_MMILL  16 -> 18 h/day  [19 machines, cumul. +2h -> 57,000 EUR/mo].  Effective 2025-11-07.
+  [GFC 2025-10-22] ALERT   WC_AMILL_HS: 88.9%
+  [GFC 2025-11-05] T2 TIER-2 (+1 machine): WC_AMILL_HS.  500,000 EUR CAPEX + 100,000 EUR/yr OPEX.  Online 2026-05-04 (6-month lead time).
+  [SIM  2025-11-07] Tier-1 effective: WC_MMILL now running 18 h/day (was 16 h)
+  [GFC 2025-12-03] T1 TIER-1 +2h (warning): WC_MMILL  18 -> 20 h/day  [19 machines, cumul. +4h -> 114,000 EUR/mo].  Effective 2026-01-02.
+  [SIM  2025-12-15] Tier-2 effective: WC_BW +1 machine (now 5 total)
+  [GFC 2025-12-17] T2-BW2 TIER-2 (2nd machine, WC_BW exception): WC_BW.  500,000 EUR CAPEX + 100,000 EUR/yr OPEX.  Online 2026-06-15 (6-month lead time).
+  [SIM  2026-01-02] Tier-1 effective: WC_MMILL now running 20 h/day (was 18 h)
+  [GFC 2026-02-11] WARNING WC_MMILL: 72.9%
+  [GFC 2026-02-25] T1-MAX TIER-1 +1h (warning): WC_MMILL  20 -> 21 h/day  [19 machines, cumul. +5h -> 142,500 EUR/mo].  Effective 2026-03-27.
+  [GFC 2026-03-11] WARNING WC_AMILL_HS: 77.2%
+  [GFC 2026-03-25] WARNING WC_BW: 81.0%
+  [SIM  2026-03-27] Tier-1 effective: WC_MMILL now running 21 h/day (was 20 h)
+  [SIM  2026-05-04] Tier-2 effective: WC_AMILL_HS +1 machine (now 4 total)
+  [SIM  2026-06-15] Tier-2 (2nd machine) effective: WC_BW +1 machine (now 6 total)
+Simulation done. Events processed: 102367
+WOs completed: 7326 / 7333
+
+======================================================================
+  STEP 3 RESULTS  |  dispatch: EDD  |  GFC active
+======================================================================
+
+  WOs completed     : 6095 / 7333
+  Mean lead time    : 21.79 days
+  P95  lead time    : 49.55 days
+  On-time delivery  : 97.7%  (5955/6095)
+  Tardy WOs         : 140
+  Avg tardiness     : 10.19 days
+
+  WC              Mach  Hrs   Avail(d)    Busy(d)   Util%    Ops  MeanQ(d)  MaxQ(d)
+  ------------------------------------------------------------------------
+  WC_3DP             6   16     2088.0     279.53   13.4%    986      0.03     3.43
+  WC_AMILL          24   21    15309.0    4352.62   28.4%   5428     -0.00     0.83
+  WC_AMILL_HS        4   21     2551.5     859.59   33.7%    976      2.34    30.50
+  WC_BW              6   21     2740.5    1450.07   52.9%  14067      0.48    54.05
+  WC_CMM             6   16     2088.0     763.30   36.6%   6924     -0.00     2.11
+  WC_CONV            4   16     1392.0     163.36   11.7%    783      0.01     0.82
+  WC_LATHE           7   16     2436.0     957.84   39.3%   1437      0.01     0.77
+  WC_MMILL          19   21     8678.2    3973.22   45.8%   7377     -0.04     1.89
+  WC_QC              9   16     3132.0     583.16   18.6%  12557     -0.10     0.53
+  WC_REWORK          1   16      348.0       0.65    0.2%   2397     -0.00     0.25
+  WC_SAW             3   16     1044.0      54.75    5.2%   1000      0.01     0.49
+
+  ── GFC Capacity Expansion Decisions (7) ──
+  2025-04-23  Tier-1  WC_BW           effective 2025-05-23  trigger util 96.6%  €30,000/mo  CAPEX €0
+  2025-06-18  Tier-2  WC_BW           effective 2025-12-15  trigger util 90.0%  €8,333/mo  CAPEX €500,000
+  2025-10-08  Tier-1  WC_MMILL        effective 2025-11-07  trigger util 71.1%  €57,000/mo  CAPEX €0
+  2025-11-05  Tier-2  WC_AMILL_HS     effective 2026-05-04  trigger util 93.3%  €8,333/mo  CAPEX €500,000
+  2025-12-03  Tier-1  WC_MMILL        effective 2026-01-02  trigger util 78.2%  €114,000/mo  CAPEX €0
+  2025-12-17  Tier-2  WC_BW           effective 2026-06-15  trigger util 99.2%  €8,333/mo  CAPEX €500,000
+  2026-02-25  Tier-1  WC_MMILL        effective 2026-03-27  trigger util 73.5%  €142,500/mo  CAPEX €0
+
+  Total extra monthly cost : €368,499/mo
+  Total CAPEX              : €1,500,000
+
+  ── GFC Alerts fired: 3 ──
+  2025-04-09  WC_BW           rolling util = 97.5%
+  2025-08-13  WC_BW           rolling util = 87.7%
+  2025-10-22  WC_AMILL_HS     rolling util = 88.9%
+
+Plot saved → /sessions/loving-youthful-hypatia/mnt/DESIGN+INTEGRATION/output/step3_simulation.png
+WO results    → /sessions/loving-youthful-hypatia/mnt/DESIGN+INTEGRATION/output/step3_wo_results.csv
+Op results    → /sessions/loving-youthful-hypatia/mnt/DESIGN+INTEGRATION/output/step3_op_results.csv
+Expansion log → /sessions/loving-youthful-hypatia/mnt/DESIGN+INTEGRATION/output/step3_expansion_log.csv
+Alert log     → /sessions/loving-youthful-hypatia/mnt/DESIGN+INTEGRATION/output/step3_alert_log.csv
+
+======================================================================
+  CONCEPTUAL DESIGN VALIDATION — STEP 3
+======================================================================
+
+  [B1] WC_AMILL_HS (Auriga) utilisation = 33.7%
+       → NOT a bottleneck at this demand level
+
+  [B2] On-time delivery with EDD = 97.7%
+       (Re-run with DISPATCH_RULE='FIFO' or 'SPT' in config.py for comparison)
+
+  [B3] Tier-1 expansions (hours): 4 — ['WC_BW', 'WC_MMILL', 'WC_MMILL', 'WC_MMILL']
+       Tier-2 expansions (machine): 3 — ['WC_BW', 'WC_AMILL_HS', 'WC_BW']
+       Total CAPEX: €1,500,000   Extra opex: €368,499/mo
+       → Tier-2 triggered: hours-extension alone insufficient for sustained load
+
+  [B4] GFC alert sensitivity:
+       Alerts fired: 3 (threshold 85.0%)
+       Earliest alert: 2025-04-09 on WC_BW
+       → GFC lead time sufficient for Tier-1 notice window
+
+  Most loaded WC : WC_BW  (52.9%)
+  Bottlenecks (>85%) : None
+  Warnings    (>70%) : None
+  WC_MMILL utilisation: 45.8%  
+
+  Next step (Step 4):
+      Add scenario analysis (demand growth), sensitivity (90% uptime),
+      and comparative dispatching-rule experiments.
+
+
+======================================================================
+Run finished: 2026-06-19T17:10:43.760902

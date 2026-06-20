@@ -142,7 +142,6 @@ def _patch_uptime(EV_module, uptime: float, rng_seed: int = 42) -> None:
 
     def _patched_start(wc, m, job, now):
         # Scale proc time by 1/uptime for limited WCs only
-        # (unlimited WCs use fixed LT, not affected by machine downtime)
         import config as _c
         if wc.cap_type == "limited":
             job = dict(job)   # shallow copy to avoid mutating original

@@ -10,7 +10,7 @@ WHAT IS NEW vs STEP 2:
   - Capacity alert fired when rolling utilisation > UTIL_ALERT (85%).
   - Capacity expansion triggered when utilisation remains above UTIL_EXPAND (90%)
     for EXPAND_SUSTAIN_DAYS (60 days) continuously.
-  - Two-tier expansion logic (per assignment spec §3.1 / §5):
+  - Two-tier expansion logic:
       Tier 1 — MANUAL WCs: extend operating hours from 16h to 21h (in 1h steps),
                1 month advance notice, costs €1,500/machine/extra-hour/month.
                Effective after EXPAND_NOTICE_DAYS (30) sim-days.

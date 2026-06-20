@@ -13,7 +13,7 @@ DATA_FILE = HERE / "data.xlsx"          # override via CLI arg in main.py
 OUT       = HERE / "output"
 
 # ── Simulation horizon ────────────────────────────────────────────────────────
-WARMUP_DAYS = 90.0   # primeros 90 días no cuentan para métricas ni GFC
+WARMUP_DAYS = 90.0   # first 90 days are warmup, not counted for metrics or GFC
 SIM_START_STR = "2025-01-01"
 SIM_END_STR   = "2026-12-31"
 
@@ -40,14 +40,13 @@ ROLLING_WINDOW_DAYS = 60.0   # rolling-average window for utilisation
 
 # Utilisation thresholds
 UTIL_WARNING        = 70.0   # rolling-avg % → warning zone  → +2 h/day (Tier-1a)
-UTIL_ALERT          = 85.0   # rolling-avg % → alert zone    → jump to 21 h/day (Tier-1b)
-                              #                                  or +1 machine if already at 21h
+UTIL_ALERT          = 85.0   # rolling-avg % → alert zone    → jump to 21 h/day (Tier-1b) or +1 machine if already at 21h
 
-GFC_EXPANSIONS_ENABLED = True   # False = solo alertas, sin expandir
+GFC_EXPANSIONS_ENABLED = True   # False = only monitor, do not expand
 
 # Sustained-overload timers (days above threshold before action fires)
 WARNING_SUSTAIN_DAYS = 14.0  # days above UTIL_WARNING before +2 h step
-ALERT_SUSTAIN_DAYS   = 7.0  # days above UTIL_ALERT  before jump-to-21h / machine
+ALERT_SUSTAIN_DAYS   = 7.0   # days above UTIL_ALERT  before jump-to-21h / machine
 
 EXPAND_NOTICE_DAYS  = 30.0   # Tier-1: hours-extension advance notice (days)
 MACHINE_LEAD_DAYS   = 180.0  # Tier-2: lead time from decision to new machine online
@@ -55,7 +54,7 @@ MACHINE_LEAD_DAYS   = 180.0  # Tier-2: lead time from decision to new machine on
 # ── Snapshot interval (for utilisation & queue time-series) ──────────────────
 SNAP_INTERVAL = 1.0   # days between snapshots (1 = daily)
 
-# ── Transport ─────────────────────────────────────────────────────────────────
+# ── Transport between WC ──────────────────────────────────────────────────────
 TRANSPORT_DELAY_WD = 30 / (16 * 60)   # 30 min expressed in MANUAL working days ≈ 0.031
 
 # ── Workcenter definitions ────────────────────────────────────────────────────

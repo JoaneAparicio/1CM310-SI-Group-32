@@ -3,70 +3,66 @@ events.py -- SDG Shopfloor Simulation
 ======================================
 Discrete-event engine.
 
-Contains:
-  - Event-type constants
-  - Event queue (min-heap via heapq)
-  - Job routing helpers: arrive_at_wc, advance_job, start_op_on_machine
-  - run_simulation(): main loop that processes all events up to SIM_END_DAYS
-
-All side-effects (WO completion, operation records) are accumulated into
-the lists `wo_completed` and `op_records`, which main.py converts to DataFrames.
+Optimisations vs original:
+  - wc.queue is now a heapq: dispatch is O(log n) instead of O(n log n) sort + O(n) pop(0).
+  - Snapshot loop only runs when sim time crosses the next SNAP_INTERVAL boundary,
+    not on every event (removes O(n_wcs) overhead from the hot path).
+  - schedule_releases uses itertuples instead of iterrows (~5x faster row access).
+  - start_op_on_machine / OP_DONE use wc.mark_busy/mark_idle to maintain the
+    WorkCenter._idle deque and _n_busy counter correctly.
 """
 
 from __future__ import annotations
 import heapq
 from datetime import date, timedelta
-from typing import TYPE_CHECKING
 
 import config
 from workcenter import WorkCenter, Machine
 import gfc as GFC
 
-if TYPE_CHECKING:
-    pass
-
 
 # Event-type constants
-EV_RELEASE        = 0   # WO released to shopfloor -> start first operation
-EV_OP_DONE        = 2   # Operation finished on a machine
-EV_FIXED_DONE     = 3   # Fixed-LT step completed
-EV_GFC_CHECK      = 4   # Periodic GFC monitoring
-EV_EXPAND_HOURS   = 5   # Tier-1 expansion effective: update hours_per_day
-EV_EXPAND_MACHINE = 6   # Tier-2 expansion effective: add machine object
+EV_RELEASE        = 0
+EV_OP_DONE        = 2
+EV_FIXED_DONE     = 3
+EV_GFC_CHECK      = 4
+EV_EXPAND_HOURS   = 5
+EV_EXPAND_MACHINE = 6
 
-# Event queue
-_events: list = []
-_ctr    = 0   # tie-breaker to keep heap ordering deterministic
+# Main event heap
+_events = []
+_ctr    = 0   # tie-breaker for event heap
+
+# Per-WC dispatch queue tie-breaker (separate counter)
+_q_ctr  = 0
 
 
-def push(t: float, etype: int, payload: dict) -> None:
+def push(t, etype, payload):
     """Insert a new event into the priority queue."""
     global _ctr
     heapq.heappush(_events, (t, _ctr, etype, payload))
     _ctr += 1
 
 
-# Date helpers
-def to_sim(d: date) -> float:
+def to_sim(d):
     return float((d - config.SIM_ORIGIN).days)
 
 
-def sim_to_date(t: float) -> date:
+def sim_to_date(t):
     return config.SIM_ORIGIN + timedelta(days=int(t))
 
 
-def next_workday_sim(t: float) -> float:
-    """Advance to the next Monday if `t` falls on a weekend."""
+def next_workday_sim(t):
+    """Advance to the next Monday if t falls on a weekend."""
     d    = config.SIM_ORIGIN + timedelta(days=int(t))
     frac = t - int(t)
-    while d.weekday() >= 5:   # 5=Sat, 6=Sun
+    while d.weekday() >= 5:
         d    += timedelta(days=1)
         frac  = 0.0
     return to_sim(d) + frac
 
 
-# Dispatch key
-def dispatch_key(job: dict) -> float:
+def dispatch_key(job):
     if config.DISPATCH_RULE == "EDD":
         return job["due_sim"]
     if config.DISPATCH_RULE == "SPT":
@@ -74,19 +70,28 @@ def dispatch_key(job: dict) -> float:
     return job["arrive_wc_time"]   # FIFO
 
 
+def _q_push(wc, job):
+    """Push a job onto the WC heap queue. O(log n)."""
+    global _q_ctr
+    heapq.heappush(wc.queue, (dispatch_key(job), _q_ctr, job))
+    _q_ctr += 1
+
+
+def _q_pop(wc):
+    """Pop the highest-priority job from the WC heap queue. O(log n)."""
+    _, _, job = heapq.heappop(wc.queue)
+    return job
+
+
 # Result accumulators
-wo_completed: list[dict] = []
-op_records:   list[dict] = []
+wo_completed = []
+op_records   = []
 
 
-# Core routing functions
-
-def start_op_on_machine(
-    wc: WorkCenter, m: Machine, job: dict, now: float
-) -> None:
+def start_op_on_machine(wc, m, job, now):
     """Assign job to machine m and schedule EV_OP_DONE."""
-    m.busy  = True
-    finish  = now + job["proc_days_cur"]
+    wc.mark_busy(m)
+    finish = now + job["proc_days_cur"]
     push(finish, EV_OP_DONE, {
         "wc":          wc.name,
         "machine_id":  m.id,
@@ -96,14 +101,8 @@ def start_op_on_machine(
     })
 
 
-def arrive_at_wc(
-    wc: WorkCenter, job: dict, now: float
-) -> None:
-    """
-    Job arrives at a workcenter.
-    - Unlimited-capacity WC: schedule fixed-delay completion immediately.
-    - Limited-capacity WC: assign to idle machine or add to queue.
-    """
+def arrive_at_wc(wc, job, now):
+    """Job arrives at a workcenter: unlimited -> fixed delay, limited -> queue or machine."""
     job["arrive_wc_time"] = now
 
     if wc.cap_type == "unlimited":
@@ -121,18 +120,11 @@ def arrive_at_wc(
             job["queue_time_cur"] = 0.0
             start_op_on_machine(wc, idle, job, now)
         else:
-            wc.queue.append(job)
+            _q_push(wc, job)
 
 
-def advance_job(
-    job: dict,
-    now: float,
-    workcenters: dict[str, WorkCenter],
-    op_rec: dict | None = None,
-) -> None:
-    """
-    Move job to its next operation, or record it as complete if routing is done.
-    """
+def advance_job(job, now, workcenters, op_rec=None):
+    """Move job to its next operation, or mark it complete."""
     if op_rec:
         op_records.append(op_rec)
 
@@ -141,7 +133,6 @@ def advance_job(
     job["op_idx"] = op_idx
 
     if op_idx >= len(ops):
-        # All operations complete -> work order done
         wo_completed.append({
             "wo_num":      job["wo_num"],
             "item_name":   job["item_name"],
@@ -156,7 +147,6 @@ def advance_job(
         })
         return
 
-    # Prepare next operation
     op      = ops[op_idx]
     wc_name = op["wc"]
     proc    = op["setup_days"] + op["run_days"] * job["ord_qty"]
@@ -164,12 +154,10 @@ def advance_job(
     job["planned_q_cur"] = op["planned_qtime"]
     job["cur_wc"]        = wc_name
 
-    # Gate new start to next workday (transport delay included)
     t_arrive = next_workday_sim(now + config.TRANSPORT_DELAY_WD)
 
     wc = workcenters.get(wc_name)
     if wc is None:
-        # Unknown WC -- treat as 1-day fixed delay (documented assumption)
         push(t_arrive + 1.0, EV_FIXED_DONE, {
             "wc":          wc_name,
             "job":         job,
@@ -180,40 +168,32 @@ def advance_job(
         arrive_at_wc(wc, job, t_arrive)
 
 
-# Simulation loop
-
-def schedule_releases(
-    df_wo,
-    routing_dict: dict[str, list[dict]],
-) -> int:
+def schedule_releases(df_wo, routing_dict):
     """
     Schedule EV_RELEASE events for all work orders.
-
-    Returns
-    -------
-    released : int -- number of WOs successfully scheduled
+    Uses itertuples (faster than iterrows).
     """
     released = 0
-    for _, wo in df_wo.iterrows():
-        if wo["item_name"] not in routing_dict:
+    for wo in df_wo.itertuples(index=False):
+        if wo.item_name not in routing_dict:
             continue
-        ops   = routing_dict[wo["item_name"]]
-        rel_t = next_workday_sim(to_sim(wo["start_date"].date()))
+        ops   = routing_dict[wo.item_name]
+        rel_t = next_workday_sim(to_sim(wo.start_date.date()))
         job   = {
-            "wo_num":      str(wo["wo_num"]),
-            "item_name":   str(wo["item_name"]),
-            "ord_qty":     int(wo["ord_qty"]),
-            "due_sim":     to_sim(wo["due_date"].date()),
+            "wo_num":      str(wo.wo_num),
+            "item_name":   str(wo.item_name),
+            "ord_qty":     int(wo.ord_qty),
+            "due_sim":     to_sim(wo.due_date.date()),
             "release_sim": rel_t,
             "ops":         ops,
-            "op_idx":      -1,   # incremented to 0 on first advance_job call
+            "op_idx":      -1,
         }
         push(rel_t, EV_RELEASE, {"job": job})
         released += 1
     return released
 
 
-def schedule_gfc_checks() -> int:
+def schedule_gfc_checks():
     """Schedule periodic GFC check events for the full simulation horizon."""
     t   = config.MONITOR_INTERVAL
     cnt = 0
@@ -224,18 +204,20 @@ def schedule_gfc_checks() -> int:
     return cnt
 
 
-def run_simulation(workcenters: dict[str, WorkCenter]) -> int:
+def run_simulation(workcenters):
     """
     Main discrete-event loop.
 
     Processes all events in chronological order until SIM_END_DAYS.
-    Modifies workcenters in place and appends to wo_completed / op_records.
-
-    Returns
-    -------
-    processed_events : int
+    Returns number of processed events.
     """
     processed = 0
+
+    # Pre-build list of limited WCs to avoid dict iteration on every event.
+    limited_wcs = [wc for wc in workcenters.values() if wc.cap_type == "limited"]
+
+    # Only sweep limited_wcs when time crosses the next snap boundary.
+    _next_snap = config.SNAP_INTERVAL
 
     while _events:
         now, _, etype, payload = heapq.heappop(_events)
@@ -243,16 +225,14 @@ def run_simulation(workcenters: dict[str, WorkCenter]) -> int:
             break
         processed += 1
 
-        # Snapshots for every limited WC
-        for wc in workcenters.values():
-            if wc.cap_type == "limited":
+        if now >= _next_snap:
+            for wc in limited_wcs:
                 wc.record_snapshot(now)
+            _next_snap = now + config.SNAP_INTERVAL
 
-        # WO RELEASE
         if etype == EV_RELEASE:
             advance_job(payload["job"], now, workcenters)
 
-        # OPERATION DONE
         elif etype == EV_OP_DONE:
             wc_name = payload["wc"]
             wc      = workcenters[wc_name]
@@ -260,10 +240,10 @@ def run_simulation(workcenters: dict[str, WorkCenter]) -> int:
             job     = payload["job"]
             t0      = payload["start_time"]
 
-            m.busy         = False
-            m.total_busy  += job["proc_days_cur"]
+            wc.mark_idle(m)
+            m.total_busy      += job["proc_days_cur"]
             wc.total_ops_done += 1
-            q_time = t0 - job["arrive_wc_time"]
+            q_time             = t0 - job["arrive_wc_time"]
             wc.queue_time_sum += q_time
 
             rec = {
@@ -281,16 +261,13 @@ def run_simulation(workcenters: dict[str, WorkCenter]) -> int:
                 "due_sim":     job["due_sim"],
             }
 
-            # Dispatch next queued job to the now-free machine
             if wc.queue:
-                wc.queue.sort(key=dispatch_key)
-                nxt = wc.queue.pop(0)
+                nxt = _q_pop(wc)
                 nxt["queue_time_cur"] = now - nxt["arrive_wc_time"]
                 start_op_on_machine(wc, m, nxt, now)
 
             advance_job(job, now, workcenters, rec)
 
-        # FIXED-LT DONE
         elif etype == EV_FIXED_DONE:
             job = payload["job"]
             rec = {
@@ -312,57 +289,41 @@ def run_simulation(workcenters: dict[str, WorkCenter]) -> int:
             }
             advance_job(job, payload["finish_time"], workcenters, rec)
 
-        # GFC PERIODIC CHECK
         elif etype == EV_GFC_CHECK:
-            GFC.gfc_monitor(
-                now, workcenters, push,
-                EV_EXPAND_HOURS, EV_EXPAND_MACHINE,
-            )
+            GFC.gfc_monitor(now, workcenters, push, EV_EXPAND_HOURS, EV_EXPAND_MACHINE)
 
-        # TIER-1: HOURS EXTENSION EFFECTIVE
         elif etype == EV_EXPAND_HOURS:
-            wc      = workcenters[payload["wc"]]
-            old_h   = wc.hours_per_day
-            new_h   = payload["new_hours"]
+            wc    = workcenters[payload["wc"]]
+            old_h = wc.hours_per_day
+            new_h = payload["new_hours"]
             wc.hours_per_day      = new_h
-            wc.tier1_effective_at = None   # extension is now live; allow next step
-            print(
-                f"  [SIM  {sim_to_date(now)}] Tier-1 effective: "
-                f"{wc.name} now running {new_h} h/day (was {old_h} h)"
-            )
+            wc.tier1_effective_at = None
+            print(f"  [SIM  {sim_to_date(now)}] Tier-1 effective: "
+                  f"{wc.name} now running {new_h} h/day (was {old_h} h)")
 
-        # TIER-2: NEW MACHINE ONLINE
         elif etype == EV_EXPAND_MACHINE:
             wc     = workcenters[payload["wc"]]
             second = payload.get("second", False)
 
-            if second:
-                # WC_BW exception: second extra machine
-                new_m = Machine(wc.n_machines, wc.name)
-                wc.machines.append(new_m)
-                print(
-                    f"  [SIM  {sim_to_date(now)}] Tier-2 (2nd machine) effective: "
-                    f"{wc.name} +1 machine (now {wc.n_machines} total)"
-                )
-                if wc.queue:
-                    wc.queue.sort(key=dispatch_key)
-                    nxt = wc.queue.pop(0)
-                    nxt["queue_time_cur"] = now - nxt["arrive_wc_time"]
-                    start_op_on_machine(wc, new_m, nxt, now)
+            new_m = Machine(wc.n_machines, wc.name)
+            wc.machines.append(new_m)
+            wc._idle.append(new_m)   # new machine starts idle
 
+            if second:
+                print(f"  [SIM  {sim_to_date(now)}] Tier-2 (2nd machine) effective: "
+                      f"{wc.name} +1 machine (now {wc.n_machines} total)")
             elif not wc.tier2_machine_added:
-                # Normal first extra machine (any WC)
-                new_m = Machine(wc.n_machines, wc.name)
-                wc.machines.append(new_m)
                 wc.tier2_machine_added = True
-                print(
-                    f"  [SIM  {sim_to_date(now)}] Tier-2 effective: "
-                    f"{wc.name} +1 machine (now {wc.n_machines} total)"
-                )
-                if wc.queue:
-                    wc.queue.sort(key=dispatch_key)
-                    nxt = wc.queue.pop(0)
-                    nxt["queue_time_cur"] = now - nxt["arrive_wc_time"]
-                    start_op_on_machine(wc, new_m, nxt, now)
+                print(f"  [SIM  {sim_to_date(now)}] Tier-2 effective: "
+                      f"{wc.name} +1 machine (now {wc.n_machines} total)")
+
+            if wc.queue:
+                nxt = _q_pop(wc)
+                nxt["queue_time_cur"] = now - nxt["arrive_wc_time"]
+                start_op_on_machine(wc, new_m, nxt, now)
+
+            # Ensure this WC is in the snapshot list (in case it wasn't limited before)
+            if wc not in limited_wcs:
+                limited_wcs.append(wc)
 
     return processed
