@@ -96,8 +96,8 @@ Key parameters:
 | `SIM_START_STR` | `"2025-01-01"` | Simulation start date |
 | `SIM_END_STR` | `"2026-12-31"` | Simulation end date |
 | `WARMUP_DAYS` | `90.0` | Warm-up period excluded from metrics |
-| `ROLLING_WINDOW_DAYS` | *(set in config)* | Window for rolling utilisation |
-| `SNAP_INTERVAL` | *(set in config)* | Snapshot recording frequency |
+| `ROLLING_WINDOW_DAYS` | `60.0` | Window for rolling utilisation |
+| `SNAP_INTERVAL` | `1.0` | Snapshot recording frequency |
 
 ---
 
